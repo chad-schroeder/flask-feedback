@@ -1,10 +1,10 @@
-from flask import Flask, render_template, redirect, request, flash, session
+from flask import Flask, render_template, redirect, session
 from flask_debugtoolbar import DebugToolbarExtension
 from secrets import FEEDBACK_API_KEY, DATABASE_URI
 from werkzeug.exceptions import Unauthorized
 
-from models import db, connect_db, User
-from forms import AddUserForm, UserLoginForm
+from models import db, connect_db, User, Feedback
+from forms import AddUserForm, UserLoginForm, AddFeedbackForm
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
@@ -114,6 +114,38 @@ def delete_user(username):
         db.session.commit()
 
         return redirect("/logout")
+
+
+@app.route('/users/<username>/feedback/add', methods=['GET', 'POST'])
+def add_feedback(username):
+    """Add feedback."""
+
+    if "user_id" not in session or session["user_id"] != username:
+        raise Unauthorized()
+
+    else:
+        form = AddFeedbackForm()
+
+        if form.validate_on_submit():
+            title = form.title.data
+            content = form.content.data
+
+            feedback = Feedback(
+                title=title, content=content, username=username)
+
+            db.session.add(feedback)
+            db.session.commit()
+
+        else:
+            return render_template(
+                "add-feedback.html", form=form, username=username)
+
+    return redirect(f"/users/{username}")
+
+
+@app.route('/feedback/<int:feedback_id>/update', methods=['GET', 'POST'])
+def update_feedback(feedback_id):
+    """Update feedback."""
 
 
 @app.route("/logout")

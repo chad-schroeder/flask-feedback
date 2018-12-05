@@ -4,7 +4,7 @@
 
 {% if field.type == "BooleanField" %}
 <div class="form-group form-check">
-    {{field(class_="form-check-input", autocomplete="off")}}
+    {{field(class_="form-check-input")}}
     {{field.label(class_="form-check-label")}}        
     {% for error in field.errors %}
     {{error}}
@@ -14,7 +14,7 @@
 
 <div class="form-group">
     {{field.label}}        
-    {{field(class_="form-control", autocomplete="off")}}
+    {{field(class_="form-control")}}
 
     {% for error in field.errors %}
     {{error}}
