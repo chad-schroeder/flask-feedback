@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Register
+{% endblock %}
+
+{% block body %}
+
+<h1>Register</h1>
+
+<form action="/register" method="POST">
+
+  {% include 'form-snippet.html' %}
+
+  <button class="btn btn-primary" type="submit">Register</button>
+
+</form>
+
+{% endblock %}
