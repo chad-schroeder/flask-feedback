@@ -1,0 +1,16 @@
+{% extends 'base.html' %} {% block title %} Update Feedback {% endblock %} {%
+block body %}
+
+<h1>Update Feedback</h1>
+
+<form
+  action="/feedback/{{ feedback.id }}/update"
+  method="POST"
+  autocomplete="off"
+>
+  {% include 'form-snippet.html' %}
+
+  <button class="btn btn-primary" type="submit">Submit</button>
+</form>
+
+{% endblock %}

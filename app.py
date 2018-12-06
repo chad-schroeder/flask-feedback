@@ -4,17 +4,17 @@ from secrets import FEEDBACK_API_KEY, DATABASE_URI
 from werkzeug.exceptions import Unauthorized
 
 from models import db, connect_db, User, Feedback
-from forms import AddUserForm, UserLoginForm, AddFeedbackForm
+from forms import AddUserForm, UserLoginForm, AddFeedbackForm, UpdateFeedbackForm
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_ECHO'] = True
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_ECHO"] = True
 
 connect_db(app)
 db.create_all()
 
-app.config['SECRET_KEY'] = FEEDBACK_API_KEY
+app.config["SECRET_KEY"] = FEEDBACK_API_KEY
 DebugToolbarExtension(app)
 app.config["DEBUG_TB_INTERCEPT_REDIRECTS"] = False
 
@@ -31,7 +31,7 @@ def homepage():
         return redirect("/register")
 
 
-@app.route("/register", methods=['GET', 'POST'])
+@app.route("/register", methods=["GET", "POST"])
 def registration():
     """Register user."""
 
@@ -64,7 +64,7 @@ def registration():
         return render_template("register.html", form=form)
 
 
-@app.route("/login", methods=['GET', 'POST'])
+@app.route("/login", methods=["GET", "POST"])
 def user_login():
     """Login user."""
 
@@ -100,7 +100,7 @@ def secret_location(username):
         return render_template("secret.html", user=user)
 
 
-@app.route("/users/<username>/delete", methods=['POST'])
+@app.route("/users/<username>/delete", methods=["POST"])
 def delete_user(username):
     """Delete a user."""
 
@@ -116,7 +116,7 @@ def delete_user(username):
         return redirect("/logout")
 
 
-@app.route('/users/<username>/feedback/add', methods=['GET', 'POST'])
+@app.route("/users/<username>/feedback/add", methods=["GET", "POST"])
 def add_feedback(username):
     """Add feedback."""
 
@@ -130,22 +130,59 @@ def add_feedback(username):
             title = form.title.data
             content = form.content.data
 
-            feedback = Feedback(
-                title=title, content=content, username=username)
+            feedback = Feedback(title=title, content=content, username=username)
 
             db.session.add(feedback)
             db.session.commit()
 
         else:
-            return render_template(
-                "add-feedback.html", form=form, username=username)
+            return render_template("add-feedback.html", form=form, username=username)
 
     return redirect(f"/users/{username}")
 
 
-@app.route('/feedback/<int:feedback_id>/update', methods=['GET', 'POST'])
+@app.route("/feedback/<int:feedback_id>/update", methods=["GET", "POST"])
 def update_feedback(feedback_id):
     """Update feedback."""
+    feedback = Feedback.query.filter_by(id=feedback_id).first()
+    username = session.get("user_id")
+
+    if "user_id" not in session or session["user_id"] != username:
+        raise Unauthorized()
+
+    else:
+        form = UpdateFeedbackForm(obj=feedback)
+
+        if form.validate_on_submit():
+            title = form.title.data
+            content = form.content.data
+
+            feedback = Feedback(title=title, content=content, username=username)
+            db.session.add(feedback)
+            db.session.commit()
+
+        else:
+            return render_template(
+                "update-feedback.html", form=form, username=username, feedback=feedback
+            )
+
+    return redirect(f"/users/{username}")
+
+
+@app.route("/feedback/<int:feedback_id>/delete", methods=["POST"])
+def delete_feedback(feedback_id):
+    """Delete a user."""
+    username = session.get("user_id")
+    if "user_id" not in session or session["user_id"] != username:
+        raise Unauthorized()
+
+    else:
+        feedback = Feedback.query.filter_by(id=feedback_id).first()
+
+        db.session.delete(feedback)
+        db.session.commit()
+
+        return redirect(f"/users/{username}")
 
 
 @app.route("/logout")
